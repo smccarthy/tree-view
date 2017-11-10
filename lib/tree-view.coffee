@@ -17,6 +17,8 @@ RootDragAndDrop = require './root-drag-and-drop'
 
 TREE_VIEW_URI = 'atom://tree-view'
 
+SCROLL_TO_LETTER_CHARACTERS = '!#./0123456789-:;?@_abcdefghijklmnopqrstuvwxyz~';
+
 toggleConfig = (keyPath) ->
   atom.config.set(keyPath, not atom.config.get(keyPath))
 
@@ -221,6 +223,7 @@ class TreeView
      'tree-view:copy': => @copySelectedEntries()
      'tree-view:cut': => @cutSelectedEntries()
      'tree-view:paste': => @pasteEntries()
+#     'tree-view:scroll-to-letter-a': => @scrollToLetter('a')
      'tree-view:copy-full-path': => @copySelectedEntryPath(false)
      'tree-view:show-in-file-manager': => @showSelectedEntryInFileManager()
      'tree-view:open-in-new-window': => @openSelectedEntryInNewWindow()
@@ -233,6 +236,10 @@ class TreeView
     [0..8].forEach (index) =>
       atom.commands.add @element, "tree-view:open-selected-entry-in-pane-#{index + 1}", =>
         @openSelectedEntryInPane index
+
+    [0..SCROLL_TO_LETTER_CHARACTERS.length].forEach (index) =>
+      atom.commands.add @element, "tree-view:scroll-to-letter-#{SCROLL_TO_LETTER_CHARACTERS[index]}", =>
+        @scrollToLetter SCROLL_TO_LETTER_CHARACTERS[index]
 
     @disposables.add atom.workspace.getCenter().onDidChangeActivePaneItem =>
       @selectActiveFile()
@@ -842,6 +849,21 @@ class TreeView
   scrollToEntry: (entry, center=true) ->
     element = if entry?.classList.contains('directory') then entry.header else entry
     element?.scrollIntoViewIfNeeded(center)
+
+  scrollToLetter: (letter) ->
+    passedFirstSelectedEntry = false
+    entries = @list.querySelectorAll('.entry')
+    for entry in entries
+      isDirectory = entry?.classList.contains('directory')
+      isRoot = if (isDirectory && entry.directory.isRoot) then true else false
+      name = if isDirectory then entry.directory.name.toLowerCase() else entry.file.name.toLowerCase()
+      if !isRoot && passedFirstSelectedEntry
+        if name.startsWith(letter)
+          @selectEntry(entry)
+          @scrollToEntry(entry)
+          break
+      if !passedFirstSelectedEntry
+        passedFirstSelectedEntry = if entry?.classList.contains('selected') then true
 
   scrollToBottom: ->
     if lastEntry = _.last(@list.querySelectorAll('.entry'))
