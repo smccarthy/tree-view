@@ -3,6 +3,10 @@
 [![Windows Build Status](https://ci.appveyor.com/api/projects/status/com793ehi0hajrkd/branch/master?svg=true)](https://ci.appveyor.com/project/Atom/tree-view/branch/master)
 [![Dependency Status](https://david-dm.org/atom/tree-view.svg)](https://david-dm.org/atom/tree-view)
 
+# Changes from upstream atom/tree-view
+1) Removed all single letter keymaps. Moved `i` to `shift-i` to toggle showing VCS files.
+2) Added `scroll-to-letter`. Enter a single letter in the tree-view, and it will select the first entry that starts with that letter. If you hit the enter the same letter again, it will find the next entry that starts with that letter. It will only find entries after the already selected entry. If multiple entries are selected already, it will find the next entry after the first entry selected. This is **not** case-sensitive.
+
 Explore and open files in the current project.
 
 Press <kbd>ctrl-\\</kbd> or <kbd>cmd-\\</kbd> to open/close the tree view and
