@@ -9,7 +9,7 @@ fs = require 'fs-plus'
 AddDialog = require './add-dialog'
 MoveDialog = require './move-dialog'
 CopyDialog = require './copy-dialog'
-Minimatch = null  # Defer requiring until actually needed
+IgnoredNames = null # Defer requiring until actually needed
 
 Directory = require './directory'
 DirectoryView = require './directory-view'
@@ -319,20 +319,6 @@ class TreeView
     else
       atom.workspace.open(uri, options)
 
-  loadIgnoredPatterns: ->
-    @ignoredPatterns.length = 0
-    return unless atom.config.get('tree-view.hideIgnoredNames')
-
-    Minimatch ?= require('minimatch').Minimatch
-
-    ignoredNames = atom.config.get('core.ignoredNames') ? []
-    ignoredNames = [ignoredNames] if typeof ignoredNames is 'string'
-    for ignoredName in ignoredNames when ignoredName
-      try
-        @ignoredPatterns.push(new Minimatch(ignoredName, matchBase: true, dot: true))
-      catch error
-        atom.notifications.addWarning("Error parsing ignore pattern (#{ignoredName})", detail: error.message)
-
   updateRoots: (expansionStates={}) ->
     oldExpansionStates = {}
     for root in @roots
@@ -340,7 +326,7 @@ class TreeView
       root.directory.destroy()
       root.remove()
 
-    @loadIgnoredPatterns()
+    IgnoredNames ?= require('./ignored-names')
 
     @roots = for projectPath in atom.project.getPaths()
       stats = fs.lstatSyncNoException(projectPath)
@@ -357,7 +343,7 @@ class TreeView
         expansionState: expansionStates[projectPath] ?
                         oldExpansionStates[projectPath] ?
                         {isExpanded: true}
-        @ignoredPatterns
+        ignoredNames: new IgnoredNames()
         @useSyncFS
         stats
       })
